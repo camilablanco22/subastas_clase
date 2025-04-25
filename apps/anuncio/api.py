@@ -1,26 +1,28 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets, filters
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from datetime import datetime, timezone
 
+from apps.anuncio.filters import CategoriaFilter, AnuncioFilter
 from apps.anuncio.models import Categoria, Anuncio
 from apps.anuncio.serializers import CategoriaSerializer, AnuncioSerializer, AnuncioReadSerializer
 from apps.usuario.models import Usuario
 
 #-----------------------Vistas Genéricas--------------------------------------#
-class CategoriaListaGenericView(ListCreateAPIView):
+class CategoriaListaV2(ListCreateAPIView):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
 
 
-class CategoriaDetalleGenericView(RetrieveUpdateDestroyAPIView):
+class CategoriaDetalleV2(RetrieveUpdateDestroyAPIView):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
 
-class AnuncioListaGenericView(ListCreateAPIView):
+class AnuncioListaV2(ListCreateAPIView):
     queryset = Anuncio.objects.all()
 
     def get_serializer_class(self):
@@ -33,7 +35,7 @@ class AnuncioListaGenericView(ListCreateAPIView):
         serializer.save(publicado_por=user)
 
 
-class AnuncioDetalleGenericView(RetrieveUpdateDestroyAPIView):
+class AnuncioDetalleV2(RetrieveUpdateDestroyAPIView):
     queryset = Anuncio.objects.all()
 
     def get_serializer_class(self):
@@ -45,12 +47,33 @@ class AnuncioDetalleGenericView(RetrieveUpdateDestroyAPIView):
 
 
 #-----------------------View sets--------------------------------------#
-class CategoriaViewSet(viewsets.ModelViewSet):
+class CategoriaV3(viewsets.ModelViewSet):
     queryset= Categoria.objects.all()
     serializer_class= CategoriaSerializer
+    #filterset_fields = ['nombre','activa']
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = CategoriaFilter
+    #filtros de orden
+    #filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['nombre','activa']
 
-class AnuncioViewSet(viewsets.ModelViewSet):
+    #para generar un filtro fijo
+    """def get_queryset(self):
+        return Categoria.objects.filter(nombre__istartswith='m')"""
+
+
+    """def get_queryset(self):
+        queryset = Categoria.objects.all()
+        nombre = self.request.query_params.get('nombre', None)
+        if nombre is not None:
+            queryset = queryset.filter(nombre=nombre)
+        return queryset"""
+
+
+
+class AnuncioV3(viewsets.ModelViewSet):
     queryset= Anuncio.objects.all()
+    filterset_class = AnuncioFilter
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
             return AnuncioReadSerializer
@@ -84,7 +107,7 @@ class AnuncioViewSet(viewsets.ModelViewSet):
 
 
 #-----------------------Vistas APIView--------------------------------------#
-class AnuncioListaAPIView(APIView):
+class AnuncioListaV1(APIView):
     def get(self, request, format = None):
         anuncios = Anuncio.objects.all()
         serializer = AnuncioReadSerializer(anuncios, many = True)
@@ -101,7 +124,7 @@ class AnuncioListaAPIView(APIView):
 
 
 
-class AnuncioDetalleAPIView(APIView):
+class AnuncioDetalleV1(APIView):
     def get(self, request, pk):
         anuncio = get_object_or_404(Anuncio, pk=pk)
         serializer = AnuncioReadSerializer(anuncio)
@@ -122,7 +145,7 @@ class AnuncioDetalleAPIView(APIView):
 
 
 
-class CategoriaListaAPIView(APIView):
+class CategoriaListaV1(APIView):
     def get(self, request, format=None):
         categorias = Categoria.objects.all()
         serializer = CategoriaSerializer(categorias, many=True)
@@ -137,7 +160,7 @@ class CategoriaListaAPIView(APIView):
 
 
 
-class CategoriaDetalleAPIView(APIView):
+class CategoriaDetalleV1(APIView):
     def get(self, request, pk):
         categoria = get_object_or_404(Categoria, pk=pk)
         serializer = CategoriaSerializer(categoria)

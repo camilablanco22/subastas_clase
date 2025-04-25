@@ -1,18 +1,17 @@
 from django.urls import path
 
-from apps.anuncio.api import CategoriaListaAPIView, CategoriaDetalleAPIView, AnuncioListaAPIView, AnuncioDetalleAPIView, \
-    CategoriaListaGenericView, CategoriaDetalleGenericView, AnuncioListaGenericView, AnuncioDetalleGenericView
-from apps.anuncio.models import Anuncio
+from apps.anuncio.api import CategoriaListaV1, CategoriaDetalleV1, AnuncioListaV1, AnuncioDetalleV1, \
+    CategoriaListaV2, CategoriaDetalleV2, AnuncioListaV2, AnuncioDetalleV2
 
 app_name = 'anuncio'
 
 urlpatterns = [
-    path('generic-view/categoria/', CategoriaListaGenericView.as_view()),
-    path('generic-view/categoria/<int:pk>/', CategoriaDetalleGenericView.as_view()),
-    path('generic-view/anuncio/', AnuncioListaGenericView.as_view()),
-    path('generic-view/anuncio/<int:pk>/', AnuncioDetalleGenericView.as_view()),
-    path('api-view/categoria/', CategoriaListaAPIView.as_view()),
-    path('api-view/categoria/<int:pk>/', CategoriaDetalleAPIView.as_view()),
-    path('api-view/anuncio/', AnuncioListaAPIView.as_view()),
-    path('api-view/anuncio/<int:pk>/', AnuncioDetalleAPIView.as_view())
+    path('v2/categoria/', CategoriaListaV2.as_view()),
+    path('v2/categoria/<int:pk>/', CategoriaDetalleV2.as_view()),
+    path('v2/anuncio/', AnuncioListaV2.as_view()),
+    path('v2/anuncio/<int:pk>/', AnuncioDetalleV2.as_view()),
+    path('v1/categoria/', CategoriaListaV1.as_view()),
+    path('v1/categoria/<int:pk>/', CategoriaDetalleV1.as_view()),
+    path('v1/anuncio/', AnuncioListaV1.as_view()),
+    path('v1/anuncio/<int:pk>/', AnuncioDetalleV1.as_view())
 ]
