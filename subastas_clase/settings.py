@@ -41,8 +41,9 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework',
     'apps.usuario',
-    'apps.anuncio'
+    'apps.anuncio',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -136,12 +137,11 @@ REST_FRAMEWORK= {
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.DjangoModelPermissions'
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',#-------intento de solucion de permisos
+        'rest_framework.authentication.SessionAuthentication',#-------me permite hacer login en la interfaz de la api
     ],
 
     'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',

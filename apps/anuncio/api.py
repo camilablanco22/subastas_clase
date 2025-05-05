@@ -1,23 +1,24 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+
+
 from rest_framework import status, viewsets, filters
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions, DjangoObjectPermissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from datetime import datetime, timezone
 from rest_framework.exceptions import PermissionDenied
 
+from apps import anuncio
 from apps.anuncio.filters import CategoriaFilter, AnuncioFilter
 from apps.anuncio.models import Categoria, Anuncio
 from apps.anuncio.serializers import CategoriaSerializer, AnuncioSerializer, AnuncioReadSerializer
 
 #-----------------------View sets--------------------------------------#
 class CategoriaV3(viewsets.ModelViewSet):
-    #-------intento de solucion de permisos
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    #-------
+
     queryset= Categoria.objects.all()
     serializer_class= CategoriaSerializer
     #filterset_fields = ['nombre','activa']
@@ -41,9 +42,7 @@ class CategoriaV3(viewsets.ModelViewSet):
 
 
 class AnuncioV3(viewsets.ModelViewSet):
-    # -------intento de solucion de permisos
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    # -------
+
     queryset= Anuncio.objects.all()
     filterset_class = AnuncioFilter
     def get_serializer_class(self):
