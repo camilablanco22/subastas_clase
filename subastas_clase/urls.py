@@ -16,25 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.authtoken.views import obtain_auth_token
+
 from subastas_clase.router import router_v3
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v3/', include(router_v3.urls)), #no utilizamos path('view-set/', include('subastas_api.router')),
-                                            #porque no funciona
+    path('api/v3/', include(router_v3.urls)),
     path('api/', include('apps.anuncio.urls', namespace='anuncio')),
+    path('api-token-auth/', obtain_auth_token),
+    path('api-auth/', include('rest_framework.urls')), #-------intento de solucion de permisos
 
 ]
 
-"""router_v1 = DefaultRouter()
-router_v1.register(r'anuncios', AnuncioListaAPIViewV1)
-router_v1.register(r'anuncios', AnuncioDetalleAPIViewV1)
-
-router_v2 = DefaultRouter()
-router_v2.register(r'usuarios', UsuarioViewSetV2)
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/v1/', include('apps.anuncio.urls', namespace='anuncio')),
-    path('api/v2/', include(router_v2.urls)),
-]
-"""

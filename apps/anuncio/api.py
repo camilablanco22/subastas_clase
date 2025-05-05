@@ -2,59 +2,28 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets, filters
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from datetime import datetime, timezone
+from rest_framework.exceptions import PermissionDenied
 
 from apps.anuncio.filters import CategoriaFilter, AnuncioFilter
 from apps.anuncio.models import Categoria, Anuncio
 from apps.anuncio.serializers import CategoriaSerializer, AnuncioSerializer, AnuncioReadSerializer
-from apps.usuario.models import Usuario
-
-#-----------------------Vistas Genéricas--------------------------------------#
-class CategoriaListaV2(ListCreateAPIView):
-    queryset = Categoria.objects.all()
-    serializer_class = CategoriaSerializer
-
-
-class CategoriaDetalleV2(RetrieveUpdateDestroyAPIView):
-    queryset = Categoria.objects.all()
-    serializer_class = CategoriaSerializer
-
-class AnuncioListaV2(ListCreateAPIView):
-    queryset = Anuncio.objects.all()
-
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return AnuncioReadSerializer
-        return AnuncioSerializer
-
-    def perform_create(self, serializer):
-        user = Usuario.objects.first()  # o `self.request.user` si usás autenticación
-        serializer.save(publicado_por=user)
-
-
-class AnuncioDetalleV2(RetrieveUpdateDestroyAPIView):
-    queryset = Anuncio.objects.all()
-
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return AnuncioReadSerializer
-        return AnuncioSerializer
-
-
-
 
 #-----------------------View sets--------------------------------------#
 class CategoriaV3(viewsets.ModelViewSet):
+    #-------intento de solucion de permisos
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    #-------
     queryset= Categoria.objects.all()
     serializer_class= CategoriaSerializer
     #filterset_fields = ['nombre','activa']
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = CategoriaFilter
     #filtros de orden
-    #filter_backends = [filters.OrderingFilter]
     ordering_fields = ['nombre','activa']
 
     #para generar un filtro fijo
@@ -72,6 +41,9 @@ class CategoriaV3(viewsets.ModelViewSet):
 
 
 class AnuncioV3(viewsets.ModelViewSet):
+    # -------intento de solucion de permisos
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    # -------
     queryset= Anuncio.objects.all()
     filterset_class = AnuncioFilter
     def get_serializer_class(self):
@@ -80,8 +52,18 @@ class AnuncioV3(viewsets.ModelViewSet):
         return AnuncioSerializer
 
     def perform_create(self, serializer):
-        user = Usuario.objects.first()
-        serializer.save(publicado_por=user)
+        serializer.save(publicado_por=self.request.user) #usuario autenticado
+
+    def perform_update(self, serializer):
+        anuncio = self.get_object()
+        if anuncio.publicado_por != self.request.user:
+            raise PermissionDenied("No cuenta con el permiso para modificar este anuncio.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.publicado_por != self.request.user:
+            raise PermissionDenied("No cuenta con el permiso para eliminar este anuncio.")
+        instance.delete()
 
     @action(detail=True, methods=['get'])
     def tiempo_restante(self, request, pk=None):
@@ -105,6 +87,41 @@ class AnuncioV3(viewsets.ModelViewSet):
         })
 
 
+#-----------------------Vistas Genéricas--------------------------------------#
+class CategoriaListaV2(ListCreateAPIView):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+
+
+class CategoriaDetalleV2(RetrieveUpdateDestroyAPIView):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+
+class AnuncioListaV2(ListCreateAPIView):
+    queryset = Anuncio.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return AnuncioReadSerializer
+        return AnuncioSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(publicado_por=self.request.user)
+
+
+class AnuncioDetalleV2(RetrieveUpdateDestroyAPIView):
+    queryset = Anuncio.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return AnuncioReadSerializer
+        return AnuncioSerializer
+
+
+
+
+
+
 
 #-----------------------Vistas APIView--------------------------------------#
 class AnuncioListaV1(APIView):
@@ -115,9 +132,8 @@ class AnuncioListaV1(APIView):
 
     def post(self, request, format = None):
         serializer = AnuncioSerializer(data = request.data)
-        user = Usuario.objects.first()
         if serializer.is_valid():
-            serializer.save(publicado_por=user)
+            serializer.save(publicado_por=self.request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
