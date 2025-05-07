@@ -14,11 +14,12 @@ from rest_framework.exceptions import PermissionDenied
 from apps import anuncio
 from apps.anuncio.filters import CategoriaFilter, AnuncioFilter
 from apps.anuncio.models import Categoria, Anuncio
-from apps.anuncio.serializers import CategoriaSerializer, AnuncioSerializer, AnuncioReadSerializer
+from apps.anuncio.serializers import CategoriaSerializer, AnuncioSerializer, AnuncioReadSerializer, OfertaSerializer
+
 
 #-----------------------View sets--------------------------------------#
 class CategoriaV3(viewsets.ModelViewSet):
-
+    #lookup_field = 'uuid'
     queryset= Categoria.objects.all()
     serializer_class= CategoriaSerializer
     #filterset_fields = ['nombre','activa']
@@ -42,10 +43,12 @@ class CategoriaV3(viewsets.ModelViewSet):
 
 
 class AnuncioV3(viewsets.ModelViewSet):
-
+    #lookup_field = 'uuid'
     queryset= Anuncio.objects.all()
     filterset_class = AnuncioFilter
     def get_serializer_class(self):
+        if self.action == 'ofertar':
+            return OfertaSerializer
         if self.action in ['list', 'retrieve']:
             return AnuncioReadSerializer
         return AnuncioSerializer
@@ -84,6 +87,30 @@ class AnuncioV3(viewsets.ModelViewSet):
             "minutos": minutos,
             "fecha_fin": anuncio.fecha_fin
         })
+    #OFERTAR POR UN ANUNCIO
+    @action(detail=True, methods=['post'], url_path='ofertar')
+    def ofertar(self, request, pk=None):
+        anuncio = self.get_object()
+
+        if not anuncio.activo:
+            return Response({"error": "Este anuncio no está activo."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if anuncio.publicado_por == request.user:
+            return Response({"error": "No podés ofertar sobre tu propio anuncio."}, status=status.HTTP_403_FORBIDDEN)
+
+        ahora = datetime.now(timezone.utc)
+        if anuncio.fecha_fin and anuncio.fecha_fin < ahora:
+            return Response({"error": "Este anuncio ya finalizó."}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(usuario=request.user, anuncio=anuncio)
+            return Response({
+                "mensaje": "Oferta registrada exitosamente.",
+                "oferta": serializer.data
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 #-----------------------Vistas Genéricas--------------------------------------#

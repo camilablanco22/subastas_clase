@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Categoria, Anuncio
+from .models import Categoria, Anuncio, OfertaAnuncio
 from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
 
@@ -53,7 +53,6 @@ class AnuncioSerializer(serializers.ModelSerializer):
 
     def validate_precio_inicial(self, value):
         #Verificar que el precio inicial de la suabsta sea mayor o igual a cero
-
         if value <= 0:
             raise serializers.ValidationError("El precio inicial de la subasta debe ser mayor o igual a cero.")
         return value
@@ -79,7 +78,6 @@ class AnuncioSerializer(serializers.ModelSerializer):
         fecha_15_dias_despues = fecha_actual + relativedelta(days=15)
         if fecha_15_dias_despues < data['fecha_inicio']:
             raise serializers.ValidationError("La subasta no puede tardar mas de 15 días en iniciar.")
-
         return data
 
 
@@ -108,3 +106,9 @@ class AnuncioReadSerializer(serializers.ModelSerializer):
             'oferta_ganadora',
             'fecha_publicacion',
             ]
+
+class OfertaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OfertaAnuncio
+        fields = ['anuncio', 'fecha_oferta', 'precio_oferta', 'es_ganador', 'usuario']
+        read_only_fields = ['usuario', 'anuncio', 'fecha_oferta']

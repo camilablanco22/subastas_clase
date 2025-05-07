@@ -1,9 +1,10 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
-
+import uuid
 
 class Categoria(models.Model):
+    #uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     nombre = models.CharField(max_length=100, unique=True)
     activa = models.BooleanField(default=True)
 
@@ -12,6 +13,7 @@ class Categoria(models.Model):
 
 
 class Anuncio(models.Model):
+    #uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio_inicial = models.DecimalField(decimal_places=2, max_digits=10)
@@ -42,6 +44,7 @@ class SeguimientoAnuncio(models.Model):
 
 
 class OfertaAnuncio(models.Model):
+    #uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     anuncio = models.ForeignKey('Anuncio', on_delete=models.CASCADE, related_name='ofertas')
     fecha_oferta = models.DateTimeField(auto_now_add=True)
     precio_oferta = models.DecimalField(decimal_places=2, max_digits=10)
