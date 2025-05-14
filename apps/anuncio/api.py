@@ -92,12 +92,14 @@ class AnuncioV3(viewsets.ModelViewSet):
     def ofertar(self, request, pk=None):
         anuncio = self.get_object()
 
+    #DUDAS: ¿ES CORRECTO VALIDAR AQUI O DEBO HACERLO EN EL SERIALIZADOR?
+        #serializer
         if not anuncio.activo:
             return Response({"error": "Este anuncio no está activo."}, status=status.HTTP_400_BAD_REQUEST)
 
         if anuncio.publicado_por == request.user:
             return Response({"error": "No podés ofertar sobre tu propio anuncio."}, status=status.HTTP_403_FORBIDDEN)
-
+        # serializer
         ahora = datetime.now(timezone.utc)
         if anuncio.fecha_fin and anuncio.fecha_fin < ahora:
             return Response({"error": "Este anuncio ya finalizó."}, status=status.HTTP_400_BAD_REQUEST)

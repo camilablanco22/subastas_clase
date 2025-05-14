@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from rest_framework.authtoken.views import obtain_auth_token
 
 from subastas_clase.router import router_v3
@@ -26,6 +27,13 @@ urlpatterns = [
     path('api/', include('apps.anuncio.urls', namespace='anuncio')),
     path('api-token-auth/', obtain_auth_token),
     path('api-auth/', include('rest_framework.urls')), #-------intento de solucion de permisos
+
+    # Ruta para generarel esquema OpenAPI
+     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+     # DocumentaciónSwagger interactiva
+     path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+     # DocumentaciónRedoc (estáticay ordenada)
+     path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 
 ]
 

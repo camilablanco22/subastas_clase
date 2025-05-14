@@ -1,4 +1,8 @@
+from decimal import Decimal
+
+import requests
 from rest_framework import serializers
+from subastas_clase import settings
 from .models import Categoria, Anuncio, OfertaAnuncio
 from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
@@ -81,31 +85,43 @@ class AnuncioSerializer(serializers.ModelSerializer):
         return data
 
 
-
 class AnuncioReadSerializer(serializers.ModelSerializer):
     categorias = serializers.StringRelatedField(many=True)
-    publicado_por = serializers.StringRelatedField(many = False)
-    oferta_ganadora = serializers.StringRelatedField(many = False)
+    publicado_por = serializers.StringRelatedField()
+    oferta_ganadora = serializers.StringRelatedField()
+
+    precio_usd = serializers.SerializerMethodField()
+    precio_eur = serializers.SerializerMethodField()
+
     class Meta:
         model = Anuncio
         fields = [
-            'id',
-            'titulo',
-            'descripcion',
-            'precio_inicial',
-            'fecha_inicio',
-            'fecha_fin',
-            'fecha_publicacion',
-            'categorias',
-            'activo',
-            'publicado_por',
-            'oferta_ganadora'
+            'id', 'titulo', 'descripcion', 'precio_inicial',
+            'precio_usd', 'precio_eur',
+            'fecha_inicio', 'fecha_fin', 'fecha_publicacion',
+            'categorias', 'activo', 'publicado_por', 'oferta_ganadora'
         ]
-        read_only_fields =[
-            'publicado_por',
-            'oferta_ganadora',
-            'fecha_publicacion',
-            ]
+        read_only_fields = ['publicado_por', 'oferta_ganadora', 'fecha_publicacion']
+
+    def get_precio_usd(self, obj):
+        return self.convertir_moneda(obj.precio_inicial, 'USD')
+
+    def get_precio_eur(self, obj):
+        return self.convertir_moneda(obj.precio_inicial, 'EUR')
+
+    def convertir_moneda(self, monto, moneda_destino):
+        url = f"https://v6.exchangerate-api.com/v6/{settings.EXCHANGE_API_KEY}/latest/ARS"
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise Exception("No se pudo obtener la tasa de cambio")
+
+        data = response.json()
+        tasa = data['conversion_rates'].get(moneda_destino)
+
+        if tasa is None:
+            raise Exception(f"Tasa de cambio no encontrada para {moneda_destino}")
+
+        return round(monto * Decimal(str(tasa)), 2)
 
 class OfertaSerializer(serializers.ModelSerializer):
     class Meta:

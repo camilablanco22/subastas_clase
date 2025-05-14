@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'rest_framework',
+    'drf_spectacular',
     'apps.usuario',
     'apps.anuncio',
 ]
@@ -149,5 +150,8 @@ REST_FRAMEWORK= {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
     'ALLOWED_VERSIONS': ['v1', 'v2',],
     'DEFAULT_VERSION': 'v1',
+
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
 }
 
+EXCHANGE_API_KEY = 'cb74a2d36f25565d07a64da1'
