@@ -15,7 +15,8 @@ def test_api_lista_categorias(get_authenticated_client, get_categorias):
     # verificar que se devuelvan las categorias creadas en "get_categorias"
     # tener en cuenta que puede variar el orden de las categorias devueltas en funcion de los parametros iniciales del api
 
-    data = response.data
+
+    data = response.data["results"]
     assert data[0]['nombre'] == categoria1.nombre # Computacion
     assert data[1]['nombre'] == categoria2.nombre  # Electronica
     assert data[2]['nombre'] == categoria3.nombre  # Hogar
@@ -37,7 +38,19 @@ def test_api_lista_categorias_filtradas(get_authenticated_client, get_categorias
 
     # verificar que se devuelvan solo las dos categorias activas
 
-    data = response.data
+    data = response.data["results"]
     assert len(data) == 2
     assert data[0]['nombre'] == categoria1.nombre # Computacion
     assert data[1]['nombre'] == categoria2.nombre  # Electronica
+
+@pytest.mark.django_db
+def test_api_creacion_categoria(get_authenticated_client, get_categorias):
+    client = get_authenticated_client
+
+    data = {
+        "nombre": "Indumentaria",
+    }
+
+    response = client.post(f'/api/v3/categoria/', data=data)
+    assert response.status_code == 201
+    assert Categoria.objects.filter(nombre='Indumentaria').count() == 1

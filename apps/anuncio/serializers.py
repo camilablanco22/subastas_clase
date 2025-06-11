@@ -67,6 +67,11 @@ class AnuncioSerializer(serializers.ModelSerializer):
 
         if value < fecha_actual:
             raise serializers.ValidationError("La fecha de inicio no puede ser anterior a la fecha actual.")
+
+        fecha_actual = datetime.now(timezone.utc)
+        fecha_15_dias_despues = fecha_actual + relativedelta(days=15)
+        if fecha_15_dias_despues < value:
+            raise serializers.ValidationError("La subasta no puede tardar mas de 15 días en iniciar.")
         return value
 
 
@@ -77,11 +82,6 @@ class AnuncioSerializer(serializers.ModelSerializer):
         fecha_un_anio_despues = data['fecha_inicio'] + relativedelta(years=1)
         if fecha_un_anio_despues < data['fecha_fin'] :
             raise serializers.ValidationError("El anuncio no puede durar mas de un año.")
-
-        fecha_actual = datetime.now(timezone.utc)
-        fecha_15_dias_despues = fecha_actual + relativedelta(days=15)
-        if fecha_15_dias_despues < data['fecha_inicio']:
-            raise serializers.ValidationError("La subasta no puede tardar mas de 15 días en iniciar.")
         return data
 
 
