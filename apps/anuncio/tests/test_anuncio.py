@@ -190,7 +190,7 @@ def test_modificar_anuncio_errores_generales(get_authenticated_client, get_anunc
 
 @pytest.mark.django_db
 def test_put_anuncio_usuario_no_autorizado(get_intruso, get_anuncio, get_categoria):
-    client = get_intruso
+    client, user_intruso = get_intruso
     anuncio = get_anuncio
     categoria = get_categoria
 
@@ -207,4 +207,5 @@ def test_put_anuncio_usuario_no_autorizado(get_intruso, get_anuncio, get_categor
 
     assert response.status_code == 403
     assert "No cuenta con el permiso para modificar este anuncio." in str(response.data["detail"])
+    assert anuncio.publicado_por != user_intruso
 

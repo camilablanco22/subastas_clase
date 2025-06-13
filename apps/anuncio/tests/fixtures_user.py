@@ -47,4 +47,4 @@ def get_intruso(api_client):
     intruso = create_user(username="intruso", documento_identidad="99999999",  first_name='intruso', last_name='intruso', email="intruso@root.com", is_superuser=True, is_staff=True)
     token, _ = Token.objects.get_or_create(user=intruso)
     api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-    return api_client
+    return api_client, intruso
